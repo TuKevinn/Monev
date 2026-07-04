@@ -251,7 +251,7 @@ def style_summary_row(df_row):
 # ════════════════════════════════════════════════════════════════════
 # 3. INTERFACE DASHBOARD UTAMA (REFRESHED VIEW)
 # ════════════════════════════════════════════════════════════════════
-st.markdown("<h1 style='margin-bottom: 0rem;'>📊 Monev Monitor</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='margin-bottom: 0rem;'> Monev Monitor</h1>", unsafe_allow_html=True)
 st.markdown("<p style='color: #94A3B8; font-size: 1rem; margin-top: -5px; margin-bottom: 1.5rem;'>Sistem Sinkronisasi & Audit Data Keterbukaan Informasi Publik</p>", unsafe_allow_html=True)
 
 # Bungkus file uploader agar rapi
