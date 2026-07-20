@@ -4,4 +4,4 @@ plotly
 numpy
 openpyxl
 reportlab
-kaleido
+kaleido==0.2.1
