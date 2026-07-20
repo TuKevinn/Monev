@@ -1,5 +1,5 @@
 """
-MONEV MONITOR v12.1 - Enhanced UI/UX with Flaticon Elements & True PDF Graphics
+MONEV MONITOR v12.8 - Adaptive Theme Theme Engine & HD PDF Graphics
 ==================================================================
 Sistem Sinkronisasi & Audit Data Keterbukaan Informasi Publik.
 """
@@ -19,57 +19,61 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
 # ════════════════════════════════════════════════════════════════════
-# 1. KONFIGURASI UTAMA & THEME KUSTOM
+# 1. KONFIGURASI UTAMA & THEME KUSTOM (ADAPTIF MULTI-THEME)
 # ════════════════════════════════════════════════════════════════════
 st.set_page_config(page_title="Monev Monitor", layout="wide", page_icon="📊")
 
+# Menggunakan variabel CSS Streamlit (--text-color, --secondary-background-color) agar mendukung Light & Dark Mode
 st.markdown("""
     <style>
     .block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 95%; }
-    h1, h2, h3, h4 { font-weight: 700 !important; color: #F8FAFC !important; letter-spacing: -0.02em; }
+    h1, h2, h3, h4 { font-weight: 700 !important; letter-spacing: -0.02em; color: var(--text-color) !important; }
     
     .header-container { display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem; }
     .header-icon { width: 50px; height: 50px; }
 
     .metric-container {
-        background: linear-gradient(145deg, #1E293B, #0F172A);
-        border: 1px solid #334155;
+        background: var(--secondary-background-color);
+        border: 1px solid rgba(128, 128, 128, 0.2);
         border-radius: 14px;
         padding: 22px 16px;
         text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         transition: all 0.2s ease;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     .metric-container:hover {
-        transform: translateY(-3px); border-color: #475569;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        transform: translateY(-3px);
+        border-color: rgba(128, 128, 128, 0.4);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
     .metric-icon { width: 32px; height: 32px; margin-bottom: 10px; }
     .metric-val { font-size: 1.9rem; font-weight: 700; margin-bottom: 2px; font-family: system-ui; }
-    .metric-lbl { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94A3B8; font-weight: 600; }
+    .metric-lbl { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-color); opacity: 0.7; font-weight: 600; }
 
     .audit-card {
-        background: rgba(239, 68, 68, 0.03); border: 1px solid rgba(239, 68, 68, 0.15);
+        background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.25);
         border-radius: 12px; padding: 20px; margin-bottom: 22px; border-left: 5px solid #EF4444;
     }
-    .card-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; color: #FCA5A5; display: flex; align-items: center; gap: 10px; }
+    .card-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; color: #EF4444; display: flex; align-items: center; gap: 10px; }
     .card-title img { width: 24px; height: 24px; }
-    .card-desc { font-size: 0.92rem; color: #CBD5E1; line-height: 1.6; }
+    .card-desc { font-size: 0.92rem; color: var(--text-color); line-height: 1.6; }
 
     .info-stat-card {
-        background: #1E293B; border: 1px solid #334155; border-radius: 10px;
+        background: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 10px;
         padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px;
+        color: var(--text-color);
     }
     .info-stat-icon { width: 28px; height: 28px; }
 
     .stTabs [data-baseweb="tab-list"] { gap: 8px; padding-bottom: 8px; }
     .stTabs [data-baseweb="tab"] {
-        padding: 10px 24px; background-color: #1E293B; border-radius: 8px; 
-        border: 1px solid #334155; color: #94A3B8; font-weight: 500;
+        padding: 10px 24px; background-color: var(--secondary-background-color); border-radius: 8px; 
+        border: 1px solid rgba(128, 128, 128, 0.2); color: var(--text-color); opacity: 0.8; font-weight: 500;
     }
     .stTabs [aria-selected="true"] { 
         background: #3B82F6 !important; color: #FFFFFF !important; border-color: #3B82F6 !important;
+        opacity: 1.0 !important;
         box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
     }
     </style>
@@ -192,14 +196,11 @@ def run_data_auditor(df_resolved):
 def create_summary(df_cleaned_final, tahun_filter="Semua"):
     summary_list = []
     
-    # Memotong data kerja dasar agar sinkron penuh dengan visualisasi grafik
     if tahun_filter != "Semua":
         df_working = df_cleaned_final[df_cleaned_final['tahun'] == int(tahun_filter)]
     else:
         df_working = df_cleaned_final
         
-    # PERBAIKAN: JANGAN pakai drop_duplicates lintasan kolom tahun di sini, 
-    # melainkan langsung looping berbasis rekaman baris riwayat yang aktif di database grafik
     for idx, row in df_working.iterrows():
         name_canonical = row['badan_canonical']
         name_real = row['badan']
@@ -207,19 +208,15 @@ def create_summary(df_cleaned_final, tahun_filter="Semua"):
         current_year = row['tahun']
         current_status = row['kualifikasi']
         
-        # Ambil keseluruhan histori instansi terkait dari master data bersih
         master_sub = df_cleaned_final[(df_cleaned_final['badan_canonical'] == name_canonical) & (df_cleaned_final['region'] == reg)]
         years = sorted(master_sub['tahun'].unique())
         inf_years = sorted(master_sub[(master_sub['kualifikasi'] == 'Informatif')]['tahun'].unique())
         
-        # Jika filter per tahun diaktifkan, tampilkan Nama Real dan Status Spesifik tahun itu.
-        # Jika semua tahun, tampilkan Nama Baku (Canonical) dan Status Paling Baru.
         if tahun_filter != "Semua":
             display_name = name_real
             display_status = current_status
         else:
             display_name = name_canonical
-            # Ambil status paling baru dari seluruh rekam jejak tahun
             display_status = master_sub.sort_values('tahun').iloc[-1]['kualifikasi']
             
         summary_list.append({
@@ -229,13 +226,12 @@ def create_summary(df_cleaned_final, tahun_filter="Semua"):
             'Tahun Monev': ', '.join(map(str, years)),
             'Tahun Informatif': ', '.join(map(str, inf_years)) if inf_years else '-',
             'Status Terakhir': display_status,
-            'tahun_aktif': current_year # Kolom bantu internal pengaman pencarian data ganda
+            'tahun_aktif': current_year
         })
         
     if not summary_list:
         return pd.DataFrame(columns=['Nama Badan Publik', 'Wilayah', 'Jumlah Monev', 'Tahun Monev', 'Tahun Informatif', 'Status Terakhir'])
         
-    # Buat DataFrame awal dan bersihkan duplikasi bentukan rekaman baris hasil loop internal tabel jika semua tahun aktif
     df_res = pd.DataFrame(summary_list)
     if tahun_filter == "Semua":
         df_res = df_res.drop_duplicates(subset=['Nama Badan Publik', 'Wilayah'])
@@ -247,7 +243,7 @@ def style_summary_row(df_row):
     if 'Status Terakhir' in df_row.index:
         status_idx = df_row.index.get_loc('Status Terakhir')
         status_val = df_row['Status Terakhir']
-        status_color = STATUS_COLORS.get(status_val, '#FFFFFF')
+        status_color = STATUS_COLORS.get(status_val, '#1E293B')
         styles[status_idx] = f'color: {status_color}; font-weight: 700;'
     return styles
 
@@ -276,16 +272,18 @@ if uploaded_file is not None:
 
         total_evaluasi = len(df_cleaned_final) 
         total_badan = summary_data_master['Nama Badan Publik'].nunique()
-        total_informatif_rows = len(df_cleaned_final[df_cleaned_final['kualifikasi'] == 'Informatif'])
-        informatif_rate = (total_informatif_rows / total_evaluasi * 100) if total_evaluasi > 0 else 0.0
-        pernah_informatif = (summary_data_master['Tahun Informatif'] != '-').sum()
+        
+        df_metrics_base = df_cleaned_final[~df_cleaned_final['tahun'].isin([2016, 2017, 2018])]
+        total_informatif_rows = len(df_metrics_base[df_metrics_base['kualifikasi'] == 'Informatif'])
+        total_evaluasi_for_rate = len(df_metrics_base)
+        informatif_rate = (total_informatif_rows / total_evaluasi_for_rate * 100) if total_evaluasi_for_rate > 0 else 0.0
 
         m1, m2, m3, m4, m5 = st.columns(5)
         m1.markdown(f'<div class="metric-container"><img src="https://cdn-icons-png.flaticon.com/512/2875/2875433.png" class="metric-icon"><div class="metric-val" style="color:#64748B;">{total_rows_csv:,}</div><div class="metric-lbl">Total Data CSV</div></div>', unsafe_allow_html=True)
         m2.markdown(f'<div class="metric-container"><img src="https://cdn-icons-png.flaticon.com/512/9167/9167014.png" class="metric-icon"><div class="metric-val" style="color:#3B82F6;">{total_badan:,}</div><div class="metric-lbl">Badan Publik</div></div>', unsafe_allow_html=True)
         m3.markdown(f'<div class="metric-container"><img src="https://cdn-icons-png.flaticon.com/512/2618/2618245.png" class="metric-icon"><div class="metric-val" style="color:#A855F7;">{total_evaluasi:,}</div><div class="metric-lbl">Total Evaluasi</div></div>', unsafe_allow_html=True)
         m4.markdown(f'<div class="metric-container"><img src="https://cdn-icons-png.flaticon.com/512/3125/3125856.png" class="metric-icon"><div class="metric-val" style="color:#10B981;">{informatif_rate:.1f}%</div><div class="metric-lbl">Informatif Rate</div></div>', unsafe_allow_html=True)
-        m5.markdown(f'<div class="metric-container"><img src="https://cdn-icons-png.flaticon.com/512/16542/16542456.png" class="metric-icon"><div class="metric-val" style="color:#F59E0B;">{pernah_informatif:,}</div><div class="metric-lbl">Pernah Informatif</div></div>', unsafe_allow_html=True)
+        m5.markdown(f'<div class="metric-container"><img src="https://cdn-icons-png.flaticon.com/512/16542/16542456.png" class="metric-icon"><div class="metric-val" style="color:#F59E0B;">{total_informatif_rows:,}</div><div class="metric-lbl">Pernah Informatif</div></div>', unsafe_allow_html=True)
 
         st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
 
@@ -304,7 +302,6 @@ if uploaded_file is not None:
                     f_tahun = st.selectbox("Saring Tahun", ["Semua"] + [str(y) for y in available_years_list])
                 with f4: search_text = st.text_input("Cari Nama Instansi", placeholder="Masukkan kata kunci nama badan publik...")
 
-            # Membangun summary dinamis yang isinya 1:1 mengikuti data bersih milik grafik
             summary_data_filtered = create_summary(df_cleaned_final, tahun_filter=f_tahun)
             f_df = summary_data_filtered.copy()
             
@@ -315,7 +312,6 @@ if uploaded_file is not None:
             f_df = f_df.reset_index(drop=True)
             f_df.insert(0, 'No', f_df.index + 1)
 
-            # Buang kolom pembantu internal sebelum dirender ke user interface
             if 'tahun_aktif' in f_df.columns:
                 f_render = f_df.drop(columns=['tahun_aktif'])
             else:
@@ -326,12 +322,11 @@ if uploaded_file is not None:
 
        # ── TAB 2: ANALISIS GRAFIK ────────────────────────────────────
         with tab_charts:
-            st.markdown("<h3 style='font-size:1.2rem; margin-bottom:1.5rem;'>📈 Grafik Analisis Keterbukaan Informasi</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='font-size:1.2rem; margin-bottom:1rem;'>📈 Grafik Analisis Keterbukaan Informasi</h3>", unsafe_allow_html=True)
             
-            # Kontainer Grafik 1: Grafik Batang Komparasi Tahunan
             with st.container(border=True):
                 st.markdown(
-                    "<h4 style='font-size:1.1rem; margin-bottom:1rem; color:#F8FAFC;'>📊 Tren Kualifikasi Badan Publik Per Tahun</h4>",
+                    "<h4 style='font-size:1.1rem; margin-bottom:1rem;'>📊 Tren Kualifikasi Badan Publik Per Tahun</h4>",
                     unsafe_allow_html=True
                 )
 
@@ -343,12 +338,7 @@ if uploaded_file is not None:
                     total_dm = len(sub_yr)
                     
                     if yr in [2016, 2017, 2018]:
-                        inf = 0
-                        menuju = 0
-                        cukup = 0
-                        kurang = 0
-                        tidak_inf = 0
-                        tidak_diketahui = 0
+                        inf = 0; menuju = 0; cukup = 0; kurang = 0; tidak_inf = 0; tidak_diketahui = 0
                         belum_inf = total_dm
                     else:
                         inf = len(sub_yr[sub_yr['kualifikasi'] == 'Informatif'])
@@ -360,15 +350,9 @@ if uploaded_file is not None:
                         belum_inf = total_dm - inf
                     
                     summary_list.append({
-                        "tahun": yr,
-                        "Jumlah_Dimonev": total_dm,
-                        "Informatif": inf,
-                        "Menuju Informatif": menuju,
-                        "Cukup Informatif": cukup,
-                        "Kurang Informatif": kurang,
-                        "Tidak Informatif": tidak_inf,
-                        "Tidak Diketahui": tidak_diketahui,
-                        "Jumlah_Belum_Informatif": belum_inf
+                        "tahun": yr, "Jumlah_Dimonev": total_dm, "Informatif": inf,
+                        "Menuju Informatif": menuju, "Cukup Informatif": cukup, "Kurang Informatif": kurang,
+                        "Tidak Informatif": tidak_inf, "Tidak Diketahui": tidak_diketahui, "Jumlah_Belum_Informatif": belum_inf
                     })
                 
                 summary = pd.DataFrame(summary_list)
@@ -381,60 +365,38 @@ if uploaded_file is not None:
                     text=summary["Jumlah_Dimonev"], textposition="outside"
                 ))
                 
-                fig_trend.add_trace(go.Bar(
-                    x=summary["tahun"], y=summary["Informatif"],
-                    name="Informatif", marker_color=STATUS_COLORS['Informatif'],
-                    text=summary["Informatif"], textposition="outside"
-                ))
+                for status in STATUS_RANK[:-1]:  # Exclude 'Tidak Diketahui' jika terlalu kosong
+                    fig_trend.add_trace(go.Bar(
+                        x=summary["tahun"], y=summary[status],
+                        name=status, marker_color=STATUS_COLORS[status],
+                        text=summary[status].apply(lambda val: val if val > 0 else ""), textposition="outside"
+                    ))
 
-                fig_trend.add_trace(go.Bar(
-                    x=summary["tahun"], y=summary["Menuju Informatif"],
-                    name="Menuju Informatif", marker_color=STATUS_COLORS['Menuju Informatif'],
-                    text=summary["Menuju Informatif"], textposition="outside"
-                ))
-
-                fig_trend.add_trace(go.Bar(
-                    x=summary["tahun"], y=summary["Cukup Informatif"],
-                    name="Cukup Informatif", marker_color=STATUS_COLORS['Cukup Informatif'],
-                    text=summary["Cukup Informatif"], textposition="outside"
-                ))
-
-                fig_trend.add_trace(go.Bar(
-                    x=summary["tahun"], y=summary["Kurang Informatif"],
-                    name="Kurang Informatif", marker_color=STATUS_COLORS['Kurang Informatif'],
-                    text=summary["Kurang Informatif"], textposition="outside"
-                ))
-
-                fig_trend.add_trace(go.Bar(
-                    x=summary["tahun"], y=summary["Tidak Informatif"],
-                    name="Tidak Informatif", marker_color=STATUS_COLORS['Tidak Informatif'],
-                    text=summary["Tidak Informatif"], textposition="outside"
-                ))
-
+                # PERBAIKAN UTAMA: Menghapus pengaturan warna font 'white' agar otomatis menyesuaikan sistem (Dark/Light)
                 fig_trend.update_layout(
                     barmode="group", height=550, bargap=0.2,
                     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#F8FAFC", family="system-ui"),
+                    font=dict(family="system-ui"), # Font color tidak dikunci agar adaptif
                     xaxis=dict(
                         title="Tahun", showgrid=False, 
                         tickmode='array', tickvals=years_range, ticktext=[str(y) for y in years_range],
                         tickfont=dict(size=13)
                     ),
-                    yaxis=dict(title="Jumlah Badan Publik", showgrid=True, gridcolor="#334155"),
+                    yaxis=dict(title="Jumlah Badan Publik", showgrid=True, gridcolor="rgba(128, 128, 128, 0.2)"),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
                     margin=dict(l=40, r=40, t=80, b=40)
                 )
 
                 fig_trend.update_traces(
-                    textfont=dict(size=10, color="white"),
-                    marker_line_color="white", marker_line_width=0.3,
+                    textfont=dict(size=10), # Menghapus color="white" di sini agar teks di atas bar adaptif / kontras
+                    marker_line_width=0.3,
                     hovertemplate="<b>Tahun:</b> %{x} &nbsp;&nbsp;•&nbsp;&nbsp; <b>Jumlah:</b> %{y} Instansi<extra></extra>"
                 )
 
                 st.plotly_chart(fig_trend, use_container_width=True, config={"displayModeBar": False})
 
                 st.markdown("---")
-                st.markdown("<h5 style='color:#94A3B8; margin-bottom:10px;'>📝 Keterangan & Penjelasan Analisis:</h5>", unsafe_allow_html=True)
+                st.markdown("<h5 style='opacity: 0.8; margin-bottom:10px;'>📝 Keterangan & Penjelasan Analisis:</h5>", unsafe_allow_html=True)
                 
                 narasi_dashboard = ""
                 pdf_table_data = [["Tahun", "Total Dimonev", "Informatif", "Menuju Inf.", "Cukup Inf.", "Kurang Inf.", "Tidak Inf."]]
@@ -452,7 +414,16 @@ if uploaded_file is not None:
                     kurang = int(row['Kurang Informatif'])
                     tidak_inf = int(row['Tidak Informatif'])
                     
-                    if yr in [2016, 2017, 2018]:
+                    if yr == 2019:
+                        item_text = (
+                            "Tahun 2019: Terdata sebanyak 62 badan publik yang memperoleh kualifikasi Informatif. "
+                            "Jumlah tersebut terdiri atas 10 badan publik yang secara eksplisit tercantum dengan kualifikasi \"Informatif\" "
+                            "dalam Surat Keputusan Monitoring dan Evaluasi. Sementara itu, 52 badan publik lainnya secara implisit juga "
+                            "termasuk dalam kategori Informatif karena merupakan badan publik yang memperoleh peringkat 1, 2, dan 3 pada masing-masing "
+                            "kategori badan publik."
+                        )
+                        pdf_table_data.append(["2019", str(total), "62", str(menuju), str(cukup), str(kurang), str(tidak_inf)])
+                    elif yr in [2016, 2017, 2018]:
                         item_text = f"Tahun {yr}: Terdata sebanyak {total} Badan Publik yang diaudit. (Pada tahun {yr} belum diterbitkan kualifikasi informatif secara resmi)."
                         pdf_table_data.append([str(yr), str(total), "-", "-", "-", "-", "-"])
                     else:
@@ -469,10 +440,14 @@ if uploaded_file is not None:
                 st.markdown(narasi_dashboard)
 
                 try:
+                    # LOGIKAL PENCETAKAN HD PDF (Tetap dioptimalkan untuk warna cetak kertas putih bersih)
                     fig_trend_pdf = go.Figure(fig_trend)
-                    fig_trend_pdf.update_layout(paper_bgcolor="white", plot_bgcolor="white", font=dict(color="black"))
+                    fig_trend_pdf.update_layout(
+                        paper_bgcolor="white", plot_bgcolor="white", font=dict(color="black", size=10)
+                    )
                     fig_trend_pdf.update_traces(textposition="outside", textfont=dict(color="black", size=8))
-                    img_trend_bytes = fig_trend_pdf.to_image(format="png", width=780, height=380, engine="kaleido")
+                    
+                    img_trend_bytes = fig_trend_pdf.to_image(format="png", width=780, height=380, scale=3, engine="kaleido")
 
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=40, bottomMargin=40)
@@ -526,42 +501,32 @@ if uploaded_file is not None:
 
             tahun_terpilih = st.selectbox(
                 "Pilih Tahun Evaluasi Global",
-                options=available_years,
+                options=[y for y in available_years if y not in [2016, 2017, 2018]],
                 key="sb_tahun_global"
             )
 
-            # Kontainer Grafik 2: Distribusi Per Wilayah
             with st.container(border=True):
                 st.markdown(
-                    f"<h4 style='font-size:1.1rem; color:#F8FAFC; margin-bottom:1rem;'>🗺️ Distribusi Status per Wilayah (Tahun {tahun_terpilih})</h4>",
+                    f"<h4 style='font-size:1.1rem; margin-bottom:1rem;'>🗺️ Distribusi Status per Wilayah (Tahun {tahun_terpilih})</h4>",
                     unsafe_allow_html=True
                 )
 
                 df_filtered_year = df_cleaned_final[df_cleaned_final["tahun"] == tahun_terpilih]
-
-                df_region_chart = (
-                    df_filtered_year
-                    .groupby(["region", "kualifikasi"])
-                    .size()
-                    .reset_index(name="Jumlah")
-                )
+                df_region_chart = df_filtered_year.groupby(["region", "kualifikasi"]).size().reset_index(name="Jumlah")
 
                 fig_region = px.bar(
-                    df_region_chart,
-                    x="region", y="Jumlah", color="kualifikasi",
-                    barmode="stack",
-                    category_orders={"kualifikasi": STATUS_RANK},
-                    color_discrete_map=STATUS_COLORS,
+                    df_region_chart, x="region", y="Jumlah", color="kualifikasi", barmode="stack",
+                    category_orders={"kualifikasi": STATUS_RANK}, color_discrete_map=STATUS_COLORS,
                     labels={"region": "Wilayah", "Jumlah": "Jumlah Instansi", "kualifikasi": "Status Kualifikasi"},
                     height=550
                 )
 
+                # PERBAIKAN ELEMEN: Menghapus font_color statis agar tulisan label wilayah/jumlah mengikuti tema terpilh
                 fig_region.update_layout(
                     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#F8FAFC", family="system-ui"),
-                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="system-ui"),
+                    font=dict(family="system-ui"),
                     xaxis=dict(tickangle=0, automargin=True, showgrid=False, tickfont=dict(size=12)),
-                    yaxis=dict(showgrid=True, gridcolor="#334155"),
+                    yaxis=dict(showgrid=True, gridcolor="rgba(128, 128, 128, 0.2)"),
                     legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5),
                     margin=dict(l=40, r=40, t=20, b=60)
                 )
@@ -573,6 +538,7 @@ if uploaded_file is not None:
                 )
 
                 st.plotly_chart(fig_region, use_container_width=True, config={"displayModeBar": False})
+        
         # ── TAB 3: PROFIL INSTANSI ────────────────────────────────────
         with tab_profile:
             with st.container(border=True):
@@ -589,20 +555,20 @@ if uploaded_file is not None:
                 
                 c_prof1, c_prof2, c_prof3 = st.columns(3)
                 with c_prof1:
-                    st.markdown(f'<div class="info-stat-card"><img src="https://cdn-icons-png.flaticon.com/512/3652/3652191.png" class="info-stat-icon"><div><small style="color:#94A3B8; display:block; margin-bottom:2px;">PARTISIPASI MONEV</small><b>{instansi_info["Jumlah Monev"]} Kali Indeks Berjalan</b></div></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="info-stat-card"><img src="https://cdn-icons-png.flaticon.com/512/3652/3652191.png" class="info-stat-icon"><div><small style="opacity: 0.7; display:block; margin-bottom:2px;">PARTISIPASI MONEV</small><b>{instansi_info["Jumlah Monev"]} Kali Indeks Berjalan</b></div></div>', unsafe_allow_html=True)
                 with c_prof2:
-                    st.markdown(f'<div class="info-stat-card"><img src="https://cdn-icons-png.flaticon.com/512/747/747310.png" class="info-stat-icon"><div><small style="color:#94A3B8; display:block; margin-bottom:2px;">TAHUN AKTIF DATA</small><b>{instansi_info["Tahun Monev"]}</b></div></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="info-stat-card"><img src="https://cdn-icons-png.flaticon.com/512/747/747310.png" class="info-stat-icon"><div><small style="opacity: 0.7; display:block; margin-bottom:2px;">TAHUN AKTIF DATA</small><b>{instansi_info["Tahun Monev"]}</b></div></div>', unsafe_allow_html=True)
                 with c_prof3:
-                    target_color = STATUS_COLORS.get(instansi_info['Status Terakhir'], '#FFFFFF')
-                    st.markdown(f'<div class="info-stat-card"><img src="https://cdn-icons-png.flaticon.com/512/6532/6532019.png" class="info-stat-icon"><div><small style="color:#94A3B8; display:block; margin-bottom:2px;">KUALIFIKASI TERAKHIR</small><span style="color:{target_color}; font-weight:700;">{instansi_info["Status Terakhir"]}</span></div></div>', unsafe_allow_html=True)
+                    target_color = STATUS_COLORS.get(instansi_info['Status Terakhir'], '#1E293B')
+                    st.markdown(f'<div class="info-stat-card"><img src="https://cdn-icons-png.flaticon.com/512/6532/6532019.png" class="info-stat-icon"><div><small style="opacity: 0.7; display:block; margin-bottom:2px;">KUALIFIKASI TERAKHIR</small><span style="color:{target_color}; font-weight:700;">{instansi_info["Status Terakhir"]}</span></div></div>', unsafe_allow_html=True)
                 
                 hist_table = history_records[['tahun', 'kualifikasi']].rename(columns={'tahun': 'Tahun', 'kualifikasi': 'Hasil Kualifikasi'}).drop_duplicates()
                 
                 def style_hist_text(val):
-                    return f"color: {STATUS_COLORS.get(val, '#FFFFFF')}; font-weight: 700;"
+                    return f"color: {STATUS_COLORS.get(val, '#1E293B')}; font-weight: 700;"
                 
                 styled_hist = hist_table.set_index('Tahun').style.map(style_hist_text, subset=['Hasil Kualifikasi'])
-                st.markdown("<p style='margin-top:1rem; margin-bottom:0.5rem; font-weight:600; color:#94A3B8;'>Histori Lembar Penilaian:</p>", unsafe_allow_html=True)
+                st.markdown("<p style='margin-top:1rem; margin-bottom:0.5rem; font-weight:600; opacity: 0.8;'>Histori Lembar Penilaian:</p>", unsafe_allow_html=True)
                 st.table(styled_hist)
 
         # ── TAB 4: EKSPOR LAPORAN ─────────────────────────────────────
@@ -648,7 +614,7 @@ if uploaded_file is not None:
             st.markdown("<div style='margin-top:2rem;'></div>", unsafe_allow_html=True)
             
             with st.container(border=True):
-                st.markdown("<p style='font-weight:600; margin-bottom:0.8rem; color:#94A3B8;'>Statistik Rekonsiliasi Log Audit:</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-weight:600; margin-bottom:0.8rem; opacity: 0.8;'>Statistik Rekonsiliasi Log Audit:</p>", unsafe_allow_html=True)
                 col_r1, col_r2, col_r3 = st.columns(3)
                 col_r1.markdown(f"📦 **Total Baris Mentah:** {total_rows_csv:,} Baris")
                 col_r2.markdown(f"✂️ **Reduksi Duplikat Identik:** {len(df_tipe1)//2} Baris")
